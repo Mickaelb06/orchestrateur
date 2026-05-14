@@ -6,8 +6,8 @@ from datetime import datetime
 # =============================================================================
 # 1. CONFIGURATION & MÉMOIRE
 # =============================================================================
-MODEL_NAME = "gemma4:31b-cloud" # Remplace par ton modèle (ex: "gemma4:31b-cloud")
-MEMORY = [{"role": "system", "content": """Tu es un Expert en Cybersécurité (Red Team, Blue Team et OSINT).
+MODEL_NAME = "gemma4:31b-cloud" # Ton modèle
+MEMORY = [{"role": "system", "content": """Tu es L'Orchestrateur, un Expert en Cybersécurité (Red Team, Blue Team et OSINT).
 Ton but est de mener des reconnaissances méthodiques et professionnelles.
 
 RÈGLES :
@@ -27,22 +27,26 @@ SESSION_LOG = []
 
 def run_whois(target):
     print(f"[*] Whois -> {target}..."); 
-    try: return subprocess.check_output(["whois", target], stderr=subprocess.STDOUT, text=True, timeout=15)
+    try: 
+        return subprocess.check_output(["whois", target], stderr=subprocess.STDOUT, text=True, timeout=15)
     except Exception as e: return f"Erreur: {e}"
 
 def run_ping(target):
     print(f"[*] Ping -> {target}..."); 
-    try: return subprocess.check_output(["ping", "-c", "1", target], stderr=subprocess.STDOUT, text=True, timeout=15)
+    try: 
+        return subprocess.check_output(["ping", "-c", "1", target], stderr=subprocess.STDOUT, text=True, timeout=15)
     except Exception as e: return f"Erreur: {e}"
 
 def run_nmap(target):
     print(f"[*] Nmap Scanning -> {target}..."); 
-    try: return subprocess.check_output(["nmap", "-F", target], stderr=subprocess.STDOUT, text=True, timeout=60)
+    try: 
+        return subprocess.check_output(["nmap", "-F", target], stderr=subprocess.STDOUT, text=True, timeout=60)
     except Exception as e: return f"Erreur: {e}"
 
 def run_dig(target):
     print(f"[*] Dig DNS -> {target}..."); 
-    try: return subprocess.check_output(["dig", target, "ANY"], stderr=subprocess.STDOUT, text=True, timeout=15)
+    try: 
+        return subprocess.check_output(["dig", target, "ANY"], stderr=subprocess.STDOUT, text=True, timeout=15)
     except Exception as e: return f"Erreur: {e}"
 
 def run_http_header(target):
@@ -61,7 +65,8 @@ def run_ssl_check(target):
 
 def run_nikto(target):
     print(f"[*] Nikto Vulnerability Scan -> {target}...")
-    try: return subprocess.check_output(["nikto", "-h", target, "-T5"], stderr=subprocess.STDOUT, text=True, timeout=300)
+    try: 
+        return subprocess.check_output(["nikto", "-h", target, "-T5"], stderr=subprocess.STDOUT, text=True, timeout=300)
     except Exception as e: return f"Erreur Nikto: {e}"
 
 def run_dir_scan(target):
@@ -78,20 +83,15 @@ def run_dir_scan(target):
 
 def run_sherlock(username):
     print(f"[*] Sherlock OSINT -> {username}...")
-    try: return subprocess.check_output(["sherlock", username, "--timeout", "5"], stderr=subprocess.STDOUT, text=True, timeout=300)
+    try: 
+        return subprocess.check_output(["sherlock", username, "--timeout", "5"], stderr=subprocess.STDOUT, text=True, timeout=300)
     except Exception as e: return f"Erreur Sherlock: {e}"
 
-# Le Dictionnaire COMPLET
 TOOLS = {
-    "whois": run_whois,
-    "ping": run_ping,
-    "nmap": run_nmap,
-    "dig": run_dig,
-    "http_header": run_http_header,
-    "ssl_check": run_ssl_check,
-    "nikto": run_nikto,
-    "dir_scan": run_dir_scan,
-    "sherlock": run_sherlock
+    "whois": run_whois, "ping": run_ping, "nmap": run_nmap, 
+    "dig": run_dig, "http_header": run_http_header, 
+    "ssl_check": run_ssl_check, "nikto": run_nikto, 
+    "dir_scan": run_dir_scan, "sherlock": run_sherlock
 }
 
 # =============================================================================
@@ -117,7 +117,7 @@ def chat_with_agent(user_input):
         try:
             response = ollama.chat(model=MODEL_NAME, messages=MEMORY)
             text = response['message']['content']
-            print(f"\n🤖 Orchestrateur: {text}")
+            print(f"\n🤖 L'Orchestrateur: {text}")
 
             if "RAPPORT" in text.upper() or "CONCLUSION" in text.upper():
                 report_content = text.split("RAPPORT FINAL :")[-1].strip() if "RAPPORT FINAL :" in text else text
@@ -141,8 +141,9 @@ def chat_with_agent(user_input):
         except Exception as e:
             print(f"Erreur : {e}"); break
 
-print("\n--- Agent Cyber Ultimate (Full Suite) activé ---")
+print("\n--- L'Orchestrateur activé ---")
 while True:
     query = input("\n❓ Mission (ou 'exit') : ")
-    if query.lower() == 'exit': break
+    if query.lower() == 'exit': 
+        break
     chat_with_agent(query)
