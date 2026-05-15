@@ -1,7 +1,16 @@
-# On utilise une image Python officielle et légère
+
+***
+
+### 2. Le fichier `Dockerfile` (Version Finale)
+
+Voici le fichier optimisé pour être robuste et inclure toutes les dépendances.
+
+```dockerfile
+# Image Python officielle et légère
 FROM python:3.11-slim
 
-# On installe les dépendances système disponibles
+# Installation des dépendances système
+# On installe perl pour Nikto et ca-certificates pour les requêtes HTTPS
 RUN apt-get update && apt-get install -y \
     nmap \
     dnsutils \
@@ -10,25 +19,24 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     git \
     perl \
+    ca-certificates \
     && rm -rf /var/lib/apt/lists/*
 
-# --- INSTALLATION MANUELLE DE NIKTO ---
-# On clone Nikto et on le place dans /usr/local/bin pour qu'il soit accessible partout
+# Installation manuelle de Nikto (car non présent dans les dépôts Debian slim)
 RUN git clone https://github.com/Sullo/nikto.git /tmp/nikto && \
     cp /tmp/nikto/program/nikto.pl /usr/local/bin/nikto && \
     chmod +x /usr/local/bin/nikto && \
     rm -rf /tmp/nikto
-# ---------------------------------------
 
-# On crée le dossier de travail
+# Configuration du dossier de travail
 WORKDIR /app
 
-# On installe les dépendances Python
+# Installation des dépendances Python
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# On copie tout le reste du code
+# Copie du code source
 COPY . .
 
-# On lance l'agent
+# Lancement de l'agent
 CMD ["python", "cyber_agent.py"]
