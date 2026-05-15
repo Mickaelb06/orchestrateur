@@ -19,6 +19,7 @@ L'agent utilise un cycle de raisonnement **ReAct (Reason + Act)** pour orchestre
 ---
 
 ## ⚖️ Expertise en Conformité (GRC)
+
 Au-delà de la technique, L'Orchestrateur agit comme un consultant en cybersécurité. Chaque vulnérabilité détectée est analysée sous le prisme des référentiels suivants :
 - **ISO 27001** : Standard international de gestion de la sécurité.
 - **NIS 2** : Directive européenne sur la cybersécurité des entités essentielles.
@@ -55,44 +56,30 @@ La méthode Docker est la plus stable car elle installe automatiquement tous les
   ```bash
   ollama pull gemma4:31b-cloud
 
-  2. Construction et Lancement
-
+### 2. Construction et Lancement
 
 # Cloner le dépôt
- ```bash
 git clone https://github.com/Mickaelb06/orchestrateur.git
 cd orchestrateur
 
 # Construire l'image Docker
- ```bash
 docker build -t l-orchestrateur .
 
 # Lancer l'agent (le flag --network=host est crucial pour communiquer avec Ollama)
- ```bash
 docker run -it --network=host l-orchestrateur
- 
- 
+
 ⚙️ Installation Manuelle (Alternative)
-Dépendances Système (Fedora)
- ```bash
-
+# Dépendances Système (Fedora)
 sudo dnf install nmap bind-utils curl whois iputils nikto git perl -y
- 
- 
-Environnement Python
- ```bash
 
+### 3. Environnement Python
 python3 -m venv venv_cyber
 source venv_cyber/bin/activate
 pip install ollama
- 
- 
-Lancement
- ```bash
 
+### Lancement
 python cyber_agent.py
- 
- 
+
 📜 Licence & Éthique
 
 Ce projet est distribué sous licence GPLv3. 
