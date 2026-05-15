@@ -6,74 +6,91 @@ from datetime import datetime
 # =============================================================================
 # 1. CONFIGURATION & MÉMOIRE
 # =============================================================================
-MODEL_NAME = "gemma4:31b-cloud" # Ton modèle
-MEMORY = [{"role": "system", "content": """Tu es L'Orchestrateur, un Expert en Cybersécurité (Red Team, Blue Team et OSINT).
-Ton but est de mener des reconnaissances méthodiques et professionnelles.
+MODEL_NAME = "gemma4:31b-cloud" 
 
-RÈGLES :
-1. Utilise ACTION: outil(argument) pour agir.
-2. Tu peux lancer plusieurs actions d'un coup (ex: ACTION: ping(x) ACTION: whois(x)).
-3. Analyse les résultats pour déduire des vulnérabilités.
-4. Termine TOUJOURS ton analyse par 'RAPPORT FINAL :' suivi d'une synthèse complète.
+# System Prompt Hybride : Technique + Conformité (ISO/NIS2/DORA)
+SYSTEM_PROMPT = """Tu es L'Orchestrateur, un Expert Senior en Cybersécurité (Red Team, Blue Team, OSINT) et Consultant en Conformité Réglementaire.
+Ton rôle est de mener des reconnaissances méthodiques et d'aligner les résultats avec les exigences légales (ISO 27001, NIS 2 et DORA).
+
+RÈGLES DE RAISONNEMENT :
+1. ACTION : Utilise ACTION: outil(argument) pour agir. Tu peux lancer plusieurs actions.
+2. ANALYSE HOLISTIQUE : Pour chaque vulnérabilité, analyse-la sous le prisme de l'ISO 27001, NIS 2 et DORA.
+3. GAP ANALYSIS : Identifie les manquements entre l'état actuel et les exigences légales.
+4. PRIORISATION : Priorise selon la criticité du risque et les sanctions encourues (ex: obligations DORA/NIS 2).
+5. SYNTHÈSE : Termine TOUJOURS ton analyse par 'RAPPORT FINAL :' suivi d'une synthèse complète.
 
 OUTILS :
 - whois(domaine), ping(cible), nmap(cible), dig(domaine), http_header(url), ssl_check(url), nikto(cible), dir_scan(url), sherlock(pseudo)
-"""}]
+"""
+
+MEMORY = [{"role": "system", "content": SYSTEM_PROMPT}]
 SESSION_LOG = []
 
 # =============================================================================
-# 2. DÉFINITION DES OUTILS
+# 2. SÉCURITÉ : Nettoyage des entrées (Anti-Injection)
+# =============================================================================
+
+def clean_input(target):
+    """Supprime les caractères dangereux pour empêcher l'injection de commandes."""
+    # On n'autorise que les lettres, chiffres, points, tirets et slashs
+    return re.sub(r"[^a-zA-Z0-9.\-/_]", "", target)
+
+# =============================================================================
+# 3. DÉFINITION DES OUTILS
 # =============================================================================
 
 def run_whois(target):
-    print(f"[*] Whois -> {target}..."); 
-    try: 
-        return subprocess.check_output(["whois", target], stderr=subprocess.STDOUT, text=True, timeout=15)
+    t = clean_input(target)
+    print(f"[*] Whois -> {t}..."); 
+    try: return subprocess.check_output(["whois", t], stderr=subprocess.STDOUT, text=True, timeout=15)
     except Exception as e: return f"Erreur: {e}"
 
 def run_ping(target):
-    print(f"[*] Ping -> {target}..."); 
-    try: 
-        return subprocess.check_output(["ping", "-c", "1", target], stderr=subprocess.STDOUT, text=True, timeout=15)
+    t = clean_input(target)
+    print(f"[*] Ping -> {t}..."); 
+    try: return subprocess.check_output(["ping", "-c", "1", t], stderr=subprocess.STDOUT, text=True, timeout=15)
     except Exception as e: return f"Erreur: {e}"
 
 def run_nmap(target):
-    print(f"[*] Nmap Scanning -> {target}..."); 
-    try: 
-        return subprocess.check_output(["nmap", "-F", target], stderr=subprocess.STDOUT, text=True, timeout=60)
+    t = clean_input(target)
+    print(f"[*] Nmap Scanning -> {t}..."); 
+    try: return subprocess.check_output(["nmap", "-F", t], stderr=subprocess.STDOUT, text=True, timeout=60)
     except Exception as e: return f"Erreur: {e}"
 
 def run_dig(target):
-    print(f"[*] Dig DNS -> {target}..."); 
-    try: 
-        return subprocess.check_output(["dig", target, "ANY"], stderr=subprocess.STDOUT, text=True, timeout=15)
+    t = clean_input(target)
+    print(f"[*] Dig DNS -> {t}..."); 
+    try: return subprocess.check_output(["dig", t, "ANY"], stderr=subprocess.STDOUT, text=True, timeout=15)
     except Exception as e: return f"Erreur: {e}"
 
 def run_http_header(target):
-    print(f"[*] HTTP Headers -> {target}..."); 
+    t = clean_input(target)
+    print(f"[*] HTTP Headers -> {t}..."); 
     try:
-        url = target if target.startswith("http") else f"http://{target}"
+        url = t if t.startswith("http") else f"http://{t}"
         return subprocess.check_output(["curl", "-I", url], stderr=subprocess.STDOUT, text=True, timeout=15)
     except Exception as e: return f"Erreur: {e}"
 
 def run_ssl_check(target):
-    print(f"[*] Analyse SSL/TLS -> {target}...")
+    t = clean_input(target)
+    print(f"[*] Analyse SSL/TLS -> {t}...")
     try:
-        url = target.replace("http://", "").replace("https://", "").split('/')[0]
+        url = t.replace("http://", "").replace("https://", "").split('/')[0]
         return subprocess.check_output(["openssl", "s_client", "-connect", f"{url}:443", "-servername", url], stderr=subprocess.STDOUT, text=True, timeout=15)[:1000]
     except Exception as e: return f"Erreur SSL: {e}"
 
 def run_nikto(target):
-    print(f"[*] Nikto Vulnerability Scan -> {target}...")
-    try: 
-        return subprocess.check_output(["nikto", "-h", target, "-T5"], stderr=subprocess.STDOUT, text=True, timeout=300)
+    t = clean_input(target)
+    print(f"[*] Nikto Vulnerability Scan -> {t}...")
+    try: return subprocess.check_output(["nikto", "-h", t, "-T5"], stderr=subprocess.STDOUT, text=True, timeout=300)
     except Exception as e: return f"Erreur Nikto: {e}"
 
 def run_dir_scan(target):
-    print(f"[*] Dir Scan -> {target}...")
+    t = clean_input(target)
+    print(f"[*] Dir Scan -> {t}...")
     common_dirs = ["admin", "login", ".env", ".git/config", "backup", "phpmyadmin", "config.php", "wp-admin"]
     found = []
-    url = target if target.startswith("http") else f"http://{target}"
+    url = t if t.startswith("http") else f"http://{t}"
     for d in common_dirs:
         try:
             res = subprocess.check_output(["curl", "-s", "-o", "/dev/null", "-w", "%{http_code}", f"{url}/{d}"], text=True, timeout=5)
@@ -82,9 +99,9 @@ def run_dir_scan(target):
     return "\n".join(found) if found else "Aucun répertoire sensible trouvé."
 
 def run_sherlock(username):
-    print(f"[*] Sherlock OSINT -> {username}...")
-    try: 
-        return subprocess.check_output(["sherlock", username, "--timeout", "5"], stderr=subprocess.STDOUT, text=True, timeout=300)
+    u = clean_input(username)
+    print(f"[*] Sherlock OSINT -> {u}...")
+    try: return subprocess.check_output(["sherlock", u, "--timeout", "5"], stderr=subprocess.STDOUT, text=True, timeout=300)
     except Exception as e: return f"Erreur Sherlock: {e}"
 
 TOOLS = {
@@ -95,7 +112,7 @@ TOOLS = {
 }
 
 # =============================================================================
-# 3. RAPPORT & LOGIQUE
+# 4. RAPPORT & LOGIQUE
 # =============================================================================
 
 def save_report(target, ai_analysis):
@@ -104,7 +121,7 @@ def save_report(target, ai_analysis):
     evidence = "\n\n--- PREUVES TECHNIQUES BRUTES ---\n"
     for entry in SESSION_LOG:
         evidence += f"\n{entry}\n{'-'*40}"
-    analysis = f"\n\n--- ANALYSE STRATÉGIQUE DE L'IA ---\n\n{ai_analysis}"
+    analysis = f"\n\n--- ANALYSE STRATÉGIQUE & CONFORMITÉ (ISO/NIS2/DORA) ---\n\n{ai_analysis}"
     with open(filename, "w", encoding="utf-8") as f:
         f.write(header + evidence + analysis + "\n\n==========================================================")
     print(f"\n[+] Rapport sauvegardé : {filename}")
@@ -141,9 +158,8 @@ def chat_with_agent(user_input):
         except Exception as e:
             print(f"Erreur : {e}"); break
 
-print("\n--- L'Orchestrateur activé ---")
+print("\n--- L'Orchestrateur (Sécurisé & Consultant) activé ---")
 while True:
     query = input("\n❓ Mission (ou 'exit') : ")
-    if query.lower() == 'exit': 
-        break
+    if query.lower() == 'exit': break
     chat_with_agent(query)
