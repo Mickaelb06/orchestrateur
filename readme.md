@@ -56,28 +56,31 @@ La méthode Docker est la plus stable car elle installe automatiquement tous les
   ollama pull gemma4:31b-cloud
 
   2. Construction et Lancement
-bash
+
 
 # Cloner le dépôt
+ ```bash
 git clone https://github.com/Mickaelb06/orchestrateur.git
 cd orchestrateur
 
 # Construire l'image Docker
+ ```bash
 docker build -t l-orchestrateur .
 
 # Lancer l'agent (le flag --network=host est crucial pour communiquer avec Ollama)
+ ```bash
 docker run -it --network=host l-orchestrateur
  
  
 ⚙️ Installation Manuelle (Alternative)
 Dépendances Système (Fedora)
-bash
+ ```bash
 
 sudo dnf install nmap bind-utils curl whois iputils nikto git perl -y
  
  
 Environnement Python
-bash
+ ```bash
 
 python3 -m venv venv_cyber
 source venv_cyber/bin/activate
@@ -85,7 +88,7 @@ pip install ollama
  
  
 Lancement
-bash
+ ```bash
 
 python cyber_agent.py
  
