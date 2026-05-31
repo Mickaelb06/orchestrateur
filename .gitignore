@@ -1,12 +1,8 @@
-
----
-
-### 2. Le fichier `.gitignore`
-Pour éviter d'envoyer tes fichiers personnels et ton environnement virtuel sur GitHub.
-
-```text
+venv/
 venv_cyber/
-*.txt
 __pycache__/
+*.pyc
 .env
 .DS_Store
+report_*.pdf
+report_*.txt
