@@ -74,7 +74,10 @@ def check_license():
         if exp and datetime.now(timezone.utc).timestamp() > exp:
             exp_str = datetime.fromtimestamp(exp).strftime("%d/%m/%Y")
             return False, payload, f"Licence expirée le {exp_str}."
-        return True, payload, f"Licence valide — {payload.get('email','?')} ({payload.get('tier','?').upper()})"
+        seats = payload.get("seats", 1)
+        seats_label = f"{seats} poste{'s' if seats > 1 else ''}"
+        exp_str = datetime.fromtimestamp(payload.get("exp", 0)).strftime("%d/%m/%Y") if payload.get("exp") else "∞"
+        return True, payload, f"Licence valide — {payload.get('email','?')} | {payload.get('tier','?').upper()} | {seats_label} | expire {exp_str}"
     except Exception:
         return False, None, "Licence corrompue ou signature invalide."
 
