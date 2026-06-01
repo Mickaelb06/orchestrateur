@@ -7,3 +7,5 @@ __pycache__/
 report_*.pdf
 report_*.txt
 CLAUDE.md
+dist/
+*.build/
