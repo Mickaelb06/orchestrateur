@@ -139,12 +139,13 @@ python cyber_agent.py --target 192.168.1.0/24 --internal
 python cyber_agent.py --target 192.168.1.0/24 --internal --iface eth0
 ```
 
-### Variables d'environnement (optionnel)
+### Enrichissement de réputation (optionnel)
+
+VirusTotal et AbuseIPDB sont des services gratuits (compte requis) qui enrichissent l'analyse avec la réputation des IPs et domaines scannés. Sans clé, ces deux outils sont simplement ignorés.
 
 ```bash
-export VIRUSTOTAL_API_KEY=votre_clé
-export ABUSEIPDB_API_KEY=votre_clé
-export ORCHESTRATEUR_LICENSE=votre_licence   # alternative au fichier
+export VIRUSTOTAL_API_KEY=votre_clé    # https://www.virustotal.com/gui/my-apikey
+export ABUSEIPDB_API_KEY=votre_clé    # https://www.abuseipdb.com/account/api
 ```
 
 ---
@@ -155,7 +156,8 @@ Les modes `--full` et `--internal` nécessitent une licence.
 
 | | **Early Adopter** | **Standard** | **Équipe** |
 |---|---|---|---|
-| **Prix** | ~~299€~~ **199€/an** | 299€/an | 699€/an (5 postes) |
+| **Prix** | ~~299€~~ **199€/an** | 299€/an | 699€/an |
+| **Postes** | 1 | 1 | 5 |
 | Scan complet `--full` | ✅ | ✅ | ✅ |
 | Réseau interne `--internal` | ✅ | ✅ | ✅ |
 | Rapport PDF complet | ✅ | ✅ | ✅ |
