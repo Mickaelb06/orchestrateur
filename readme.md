@@ -154,21 +154,21 @@ export ABUSEIPDB_API_KEY=votre_clé    # https://www.abuseipdb.com/account/api
 
 Les modes `--full` et `--internal` nécessitent une licence.
 
-| | **Gratuit** | **Pro** | **Équipe** | **Perpétuel** |
-|---|:---:|:---:|:---:|:---:|
-| **Prix** | 0€ | 299€/an | 699€/an | 499€ (one-time) |
-| **Postes** | 1 | 1 | 5 | 1 |
-| Scan standard | ✅ | ✅ | ✅ | ✅ |
-| Scan rapide `--quick` | ✅ | ✅ | ✅ | ✅ |
-| Rapport PDF | ✅ | ✅ | ✅ | ✅ |
-| Scan complet `--full` | ❌ | ✅ | ✅ | ✅ |
-| Réseau interne `--internal` | ❌ | ✅ | ✅ | ✅ |
-| MITRE ATT&CK mapping | ❌ | ✅ | ✅ | ✅ |
-| Topologie réseau | ❌ | ✅ | ✅ | ✅ |
-| Nikto / CVE / Subdomain | ❌ | ✅ | ✅ | ✅ |
-| SMB audit / Vuln scan | ❌ | ✅ | ✅ | ✅ |
-| Mises à jour | — | ✅ 1 an | ✅ 1 an | ❌ |
-| Support | Communauté | Email | Prioritaire | Email |
+| | **Gratuit** | **Pro** | **Équipe** |
+|---|:---:|:---:|:---:|
+| **Prix** | 0€ | 299€/an | 699€/an |
+| **Postes** | 1 | 1 | 5 |
+| Scan standard | ✅ | ✅ | ✅ |
+| Scan rapide `--quick` | ✅ | ✅ | ✅ |
+| Rapport PDF | ✅ | ✅ | ✅ |
+| Scan complet `--full` | ❌ | ✅ | ✅ |
+| Réseau interne `--internal` | ❌ | ✅ | ✅ |
+| MITRE ATT&CK mapping | ❌ | ✅ | ✅ |
+| Topologie réseau | ❌ | ✅ | ✅ |
+| Nikto / CVE / Subdomain | ❌ | ✅ | ✅ |
+| SMB audit / Vuln scan | ❌ | ✅ | ✅ |
+| Mises à jour | — | ✅ | ✅ |
+| Support | Communauté | Email | Prioritaire |
 
 ### Installer votre licence
 
