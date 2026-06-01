@@ -154,15 +154,11 @@ export ABUSEIPDB_API_KEY=votre_clé    # https://www.abuseipdb.com/account/api
 
 Les modes `--full` et `--internal` nécessitent une licence.
 
-| | **Early Adopter** | **Standard** | **Équipe** |
-|---|---|---|---|
-| **Prix** | ~~299€~~ **199€/an** | 299€/an | 699€/an |
-| **Postes** | 1 | 1 | 5 |
-| Scan complet `--full` | ✅ | ✅ | ✅ |
-| Réseau interne `--internal` | ✅ | ✅ | ✅ |
-| Rapport PDF complet | ✅ | ✅ | ✅ |
-| MITRE ATT&CK mapping | ✅ | ✅ | ✅ |
-| Topologie réseau | ✅ | ✅ | ✅ |
+| Format | Prix | Pour qui |
+|--------|------|----------|
+| Licence annuelle individuelle | 299€/an | Freelance, 1 poste |
+| Licence annuelle équipe | 699€/an | Cabinet, 5 postes |
+| Licence perpétuelle | 499€ | Consultants qui n'aiment pas les abonnements |
 
 ### Installer votre licence
 
