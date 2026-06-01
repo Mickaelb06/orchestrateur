@@ -9,3 +9,4 @@ report_*.txt
 CLAUDE.md
 dist/
 *.build/
+pyarmor.bug.log
