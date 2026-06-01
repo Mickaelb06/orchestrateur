@@ -6,3 +6,4 @@ __pycache__/
 .DS_Store
 report_*.pdf
 report_*.txt
+CLAUDE.md
