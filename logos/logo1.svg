@@ -1,38 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140" width="600" height="140">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 80" width="520" height="80">
   <defs>
-    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="0%">
-      <stop offset="0%" style="stop-color:#00ffcc"/>
-      <stop offset="40%" style="stop-color:#00aaff"/>
-      <stop offset="100%" style="stop-color:#0033ff"/>
-    </linearGradient>
-    <filter id="glow1">
+    <filter id="glow">
       <feGaussianBlur stdDeviation="3" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <filter id="glow1s">
-      <feGaussianBlur stdDeviation="1.5" result="b"/>
-      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
-    </filter>
   </defs>
-
-  <!-- Icône : bracket terminal [ ] -->
-  <text x="18" y="95" font-family="'Courier New', monospace" font-size="90" font-weight="bold"
-    fill="none" stroke="url(#g1)" stroke-width="2" filter="url(#glow1)" opacity="0.85">[</text>
-  <text x="72" y="95" font-family="'Courier New', monospace" font-size="90" font-weight="bold"
-    fill="none" stroke="url(#g1)" stroke-width="2" filter="url(#glow1)" opacity="0.85">]</text>
-
-  <!-- Curseur clignotant style terminal -->
-  <rect x="34" y="28" width="28" height="42" rx="2" fill="url(#g1)" opacity="0.15" filter="url(#glow1)"/>
-  <rect x="34" y="28" width="28" height="42" rx="2" fill="none" stroke="#00ffcc" stroke-width="1" opacity="0.5"/>
-
-  <!-- Texte principal -->
-  <text x="105" y="72" font-family="'Courier New', monospace" font-size="38" font-weight="bold" fill="url(#g1)" filter="url(#glow1s)">~/</text>
-  <text x="160" y="72" font-family="'Courier New', monospace" font-size="38" font-weight="bold" fill="url(#g1)" filter="url(#glow1s)"> orchestrateur</text>
-
-  <!-- Ligne de séparation -->
-  <line x1="105" y1="85" x2="580" y2="85" stroke="url(#g1)" stroke-width="1" opacity="0.4"/>
-
-  <!-- Sous-ligne -->
-  <text x="105" y="105" font-family="'Courier New', monospace" font-size="11"
-    fill="#00aaff" letter-spacing="4" opacity="0.65">CYBER · ORCHESTRATION · SYSTEM</text>
+  <!-- ~/ en bleu vif, orchestrateur en blanc bleuté -->
+  <text x="20" y="55" font-family="'Courier New', monospace" font-size="48" font-weight="bold"
+    fill="#00aaff" filter="url(#glow)">~/</text>
+  <text x="108" y="55" font-family="'Courier New', monospace" font-size="48" font-weight="bold"
+    fill="#e0f4ff">orchestrateur</text>
+  <!-- Underscore curseur -->
+  <rect x="108" y="60" width="380" height="3" rx="1" fill="#00aaff" opacity="0.5"/>
 </svg>

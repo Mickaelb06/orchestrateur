@@ -1,42 +1,19 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 140" width="600" height="140">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 520 90" width="520" height="90">
   <defs>
-    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" style="stop-color:#00eeff"/>
-      <stop offset="100%" style="stop-color:#0011cc"/>
-    </linearGradient>
-    <filter id="glow2">
+    <filter id="glow">
       <feGaussianBlur stdDeviation="4" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
-    <filter id="glow2s">
-      <feGaussianBlur stdDeviation="2" result="b"/>
+    <filter id="glows">
+      <feGaussianBlur stdDeviation="1.5" result="b"/>
       <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
     </filter>
   </defs>
-
-  <!-- Octogone style security badge -->
-  <polygon points="55,10 85,10 105,30 105,70 85,90 55,90 35,70 35,30"
-    fill="none" stroke="url(#g2)" stroke-width="2.5" filter="url(#glow2)" opacity="0.9"/>
-  <polygon points="55,18 85,18 98,31 98,69 85,82 55,82 42,69 42,31"
-    fill="none" stroke="#0055ff" stroke-width="1" opacity="0.35"/>
-
-  <!-- Verrou au centre -->
-  <rect x="58" y="48" width="24" height="18" rx="3" fill="none" stroke="url(#g2)" stroke-width="2" filter="url(#glow2s)"/>
-  <path d="M 63 48 Q 63 38 70 38 Q 77 38 77 48" fill="none" stroke="url(#g2)" stroke-width="2" filter="url(#glow2s)"/>
-  <circle cx="70" cy="57" r="3" fill="#00eeff" filter="url(#glow2)"/>
-
-  <!-- Texte -->
-  <text x="122" y="55" font-family="'Courier New', monospace" font-size="38" font-weight="bold" fill="url(#g2)" filter="url(#glow2s)">~/</text>
-  <text x="177" y="55" font-family="'Courier New', monospace" font-size="38" font-weight="bold" fill="url(#g2)" filter="url(#glow2s)"> orchestrateur</text>
-
-  <!-- Ligne néon -->
-  <line x1="122" y1="68" x2="582" y2="68" stroke="#00eeff" stroke-width="1.5" opacity="0.5" filter="url(#glow2s)"/>
-
-  <text x="122" y="86" font-family="'Courier New', monospace" font-size="11"
-    fill="#00bbff" letter-spacing="5" opacity="0.65">SECURE · AUTOMATE · CONTROL</text>
-
-  <!-- Points déco -->
-  <circle cx="122" cy="100" r="2.5" fill="#00eeff" filter="url(#glow2s)" opacity="0.8"/>
-  <circle cx="132" cy="100" r="2.5" fill="#0055ff" opacity="0.6"/>
-  <circle cx="142" cy="100" r="2.5" fill="#0011cc" opacity="0.4"/>
+  <!-- Texte tout en bleu électrique, effet néon -->
+  <text x="20" y="58" font-family="'Courier New', monospace" font-size="46" font-weight="bold"
+    fill="#003366" >~/ orchestrateur</text>
+  <text x="20" y="58" font-family="'Courier New', monospace" font-size="46" font-weight="bold"
+    fill="#00aaff" filter="url(#glow)" opacity="0.9">~/ orchestrateur</text>
+  <!-- Ligne fine sous le texte -->
+  <line x1="20" y1="68" x2="500" y2="68" stroke="#00aaff" stroke-width="1" opacity="0.35" filter="url(#glows)"/>
 </svg>
