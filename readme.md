@@ -98,7 +98,7 @@ sudo dnf install nmap bind-utils curl whois nikto git -y
 
 ```bash
 # Installer Ollama : https://ollama.com
-ollama pull gemma4:31b-cloud
+ollama pull llama3.2:3b
 ```
 
 ### Python

@@ -124,7 +124,7 @@ if args.full or args.internal:
 # =============================================================================
 # CONFIGURATION
 # =============================================================================
-MODEL_NAME         = "gemma4:31b-cloud"
+MODEL_NAME         = "llama3.2:3b"
 VIRUSTOTAL_API_KEY = os.getenv("VIRUSTOTAL_API_KEY", "")
 ABUSEIPDB_API_KEY  = os.getenv("ABUSEIPDB_API_KEY", "")
 
