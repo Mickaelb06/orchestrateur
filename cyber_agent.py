@@ -1119,6 +1119,93 @@ def grc_from_findings(mitre_findings, sev_counts):
     return recs
 
 # =============================================================================
+# GRC — SCORES DE CONFORMITÉ PAR FRAMEWORK
+# =============================================================================
+_FW_TECHNIQUE_MAP = {
+    "ISO 27001": {
+        "prefixes": {"T1021","T1071","T1190","T1557","T1598","T1552","T1189",
+                     "T1059","T1566","T1078","T1539","T1210","T1583","T1046",
+                     "T1135","T1039","T1185","T1040","T1530","T1083","T1003"},
+        "weights": {"CRITICAL": 18, "HIGH": 10, "MEDIUM": 5, "LOW": 2},
+        "cap": 82,
+    },
+    "NIS 2": {
+        "prefixes": {"T1021","T1190","T1557","T1210","T1583","T1046","T1039",
+                     "T1598","T1071","T1135"},
+        "weights": {"CRITICAL": 20, "HIGH": 12, "MEDIUM": 6, "LOW": 2},
+        "cap": 80,
+    },
+    "DORA": {
+        "prefixes": {"T1021","T1190","T1557","T1552","T1078","T1539","T1210",
+                     "T1071"},
+        "weights": {"CRITICAL": 20, "HIGH": 12, "MEDIUM": 6, "LOW": 2},
+        "cap": 80,
+    },
+}
+
+def compute_framework_scores(mitre_findings):
+    scores = {}
+    for fw, cfg in _FW_TECHNIQUE_MAP.items():
+        deduction = 0
+        for f in mitre_findings:
+            uid  = f.get("_uid", f["technique"])
+            tech = f["technique"]
+            base_tech = re.split(r"[-.]", uid)[0] + ("." + uid.split(".")[1] if "." in uid else "")
+            matched = any(
+                uid.startswith(p) or tech.startswith(p) or f["technique"].startswith(p)
+                for p in cfg["prefixes"]
+            )
+            if matched:
+                deduction = min(deduction + cfg["weights"].get(f["severity"], 2), cfg["cap"])
+        scores[fw] = max(0, 100 - deduction)
+    return scores
+
+# =============================================================================
+# GRC — ANALYSE DES ÉCARTS PAR DOMAINE ISO 27001
+# =============================================================================
+_ISO_GAP_DOMAINS = [
+    {"id": "A.8.20", "name": "Sécurité des réseaux",             "tech_prefixes": {"T1021","T1071"},                          "nis2": "Art. 21.2e", "dora": "Art. 9.4b"},
+    {"id": "A.8.8",  "name": "Gestion des vulnérabilités",        "tech_prefixes": {"T1210","T1190"},                          "nis2": "Art. 21.2f", "dora": "Art. 9.4e"},
+    {"id": "A.8.24", "name": "Cryptographie & TLS",               "tech_prefixes": {"T1557"},                                  "nis2": "Art. 21.2h", "dora": "Art. 9.4b"},
+    {"id": "A.8.26", "name": "Sécurité des applications web",     "tech_prefixes": {"T1190","T1059","T1539","T1185","T1040"},   "nis2": "Art. 21.2e", "dora": "Art. 9.4b"},
+    {"id": "A.8.22", "name": "Ségrégation des réseaux",           "tech_prefixes": {"T1135","T1039","T1046"},                  "nis2": "Art. 21.2e", "dora": "—"},
+    {"id": "A.5.14", "name": "Sécurité email (SPF/DKIM/DMARC)",   "tech_prefixes": {"T1598"},                                  "nis2": "—",          "dora": "—"},
+    {"id": "A.8.12", "name": "Prévention des fuites de données",   "tech_prefixes": {"T1552","T1530","T1083"},                  "nis2": "Art. 21.2b", "dora": "Art. 9.4c"},
+    {"id": "A.8.2",  "name": "Gestion des accès privilégiés",     "tech_prefixes": {"T1078"},                                  "nis2": "Art. 21.2g", "dora": "Art. 9.4c"},
+    {"id": "A.8.9",  "name": "Gestion de la configuration",       "tech_prefixes": {"T1189","T1566","T1003"},                  "nis2": "Art. 21.2a", "dora": "Art. 9.2"},
+    {"id": "A.8.7",  "name": "Protection anti-malware & réputation","tech_prefixes": {"T1583"},                                 "nis2": "Art. 21.2h", "dora": "—"},
+    {"id": "A.8.23", "name": "Filtrage web (headers sécurité)",    "tech_prefixes": {"T1059"},                                  "nis2": "—",          "dora": "—"},
+]
+
+def _finding_matches_domain(f, domain):
+    uid  = f.get("_uid", f["technique"])
+    tech = f["technique"]
+    return any(uid.startswith(p) or tech.startswith(p) for p in domain["tech_prefixes"])
+
+def build_gap_analysis(mitre_findings):
+    sev_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
+    gaps = []
+    for domain in _ISO_GAP_DOMAINS:
+        matches = [f for f in mitre_findings if _finding_matches_domain(f, domain)]
+        if not matches:
+            status, worst = "CONFORME", None
+        else:
+            worst = min(matches, key=lambda x: sev_order.get(x["severity"], 4))["severity"]
+            status = {"CRITICAL": "NON CONFORME", "HIGH": "NON CONFORME",
+                      "MEDIUM": "PARTIEL", "LOW": "À AMÉLIORER"}.get(worst, "PARTIEL")
+        gaps.append({
+            "id":        domain["id"],
+            "name":      domain["name"],
+            "status":    status,
+            "severity":  worst,
+            "count":     len(matches),
+            "top":       matches[0]["name"] if matches else "—",
+            "nis2":      domain["nis2"],
+            "dora":      domain["dora"],
+        })
+    return gaps
+
+# =============================================================================
 # FINDING METADATA — impact + remédiation statiques par technique
 # =============================================================================
 FINDING_META = {
@@ -1747,7 +1834,141 @@ def save_pdf_report(target):
         mt.setStyle(TableStyle(ts))
         story += [mt, Spacer(1, 4*mm)]
 
-    # ── 6. Recommandations GRC ───────────────────────────────────────────────
+    # ── 6. Rapport GRC — Analyse de Conformité ──────────────────────────────
+    fw_scores  = compute_framework_scores(mitre)
+    gap_items  = build_gap_analysis(mitre)
+
+    story += section_title("Rapport GRC — Analyse de Conformité Réglementaire")
+
+    def _score_color(s):
+        if s >= 80: return C["low"]
+        if s >= 60: return C["medium"]
+        if s >= 40: return C["high"]
+        return C["critical"]
+
+    def _score_label(s):
+        if s >= 80: return "CONFORME"
+        if s >= 60: return "PARTIEL"
+        if s >= 40: return "À RISQUE"
+        return "NON CONFORME"
+
+    sc_row = [[
+        _p(f"<b>{fw_scores['ISO 27001']}/100</b><br/>ISO 27001:2022<br/><font size='7'>{_score_label(fw_scores['ISO 27001'])}</font>",
+           11, white, bold=True, align=TA_CENTER),
+        _p(f"<b>{fw_scores['NIS 2']}/100</b><br/>NIS 2 (UE 2022/2555)<br/><font size='7'>{_score_label(fw_scores['NIS 2'])}</font>",
+           11, white, bold=True, align=TA_CENTER),
+        _p(f"<b>{fw_scores['DORA']}/100</b><br/>DORA (UE 2022/2554)<br/><font size='7'>{_score_label(fw_scores['DORA'])}</font>",
+           11, white, bold=True, align=TA_CENTER),
+    ]]
+    sc_tbl = Table(sc_row, colWidths=[W/3]*3, rowHeights=[18*mm])
+    sc_tbl.setStyle(TableStyle([
+        ("BACKGROUND",(0,0),(0,0), _score_color(fw_scores["ISO 27001"])),
+        ("BACKGROUND",(1,0),(1,0), _score_color(fw_scores["NIS 2"])),
+        ("BACKGROUND",(2,0),(2,0), _score_color(fw_scores["DORA"])),
+        ("ALIGN",   (0,0),(-1,-1), "CENTER"),
+        ("VALIGN",  (0,0),(-1,-1), "MIDDLE"),
+        ("GRID",    (0,0),(-1,-1), 1.5, white),
+    ]))
+    story += [sc_tbl, Spacer(1, 4*mm)]
+
+    # Gap analysis table
+    story.append(_p("<b>Analyse des Écarts par Domaine ISO 27001</b>", 10, C["primary"]))
+    story.append(Spacer(1, 2*mm))
+
+    _STATUS_COLOR = {
+        "NON CONFORME": C["critical"],
+        "PARTIEL":      C["high"],
+        "À AMÉLIORER":  C["medium"],
+        "CONFORME":     C["low"],
+    }
+    gap_rows = [[
+        _p("Contrôle", 8, white, bold=True),
+        _p("Domaine", 8, white, bold=True),
+        _p("État", 8, white, bold=True, align=TA_CENTER),
+        _p("NIS 2", 8, white, bold=True, align=TA_CENTER),
+        _p("DORA", 8, white, bold=True, align=TA_CENTER),
+        _p("N", 8, white, bold=True, align=TA_CENTER),
+        _p("Finding principal", 8, white, bold=True),
+    ]]
+    gap_styles = [
+        ("BACKGROUND",  (0,0),(-1,0), C["primary"]),
+        ("ROWBACKGROUNDS",(0,1),(-1,-1), [C["bg"], white]),
+        ("GRID",        (0,0),(-1,-1), .5, C["border"]),
+        ("PADDING",     (0,0),(-1,-1), 5),
+        ("VALIGN",      (0,0),(-1,-1), "MIDDLE"),
+    ]
+    for i, g in enumerate(gap_items, 1):
+        gap_rows.append([
+            _p(f"<b>{g['id']}</b>", 8, C["accent"]),
+            _p(g["name"], 8),
+            _p(g["status"], 7, white, bold=True, align=TA_CENTER),
+            _p(g["nis2"], 7, C["muted"], align=TA_CENTER),
+            _p(g["dora"], 7, C["muted"], align=TA_CENTER),
+            _p(str(g["count"]) if g["count"] else "✓", 8,
+               C["critical"] if g["count"] > 0 else C["low"], align=TA_CENTER),
+            _p(esc(g["top"][:55]), 7, C["muted"]),
+        ])
+        gap_styles.append(("BACKGROUND", (2,i),(2,i), _STATUS_COLOR.get(g["status"], C["muted"])))
+    gap_tbl = Table(gap_rows, colWidths=[W*.09, W*.21, W*.12, W*.09, W*.07, W*.05, W*.37])
+    gap_tbl.setStyle(TableStyle(gap_styles))
+    story += [gap_tbl, Spacer(1, 4*mm)]
+
+    # Remediation roadmap
+    story.append(_p("<b>Plan de Traitement des Risques</b>", 10, C["primary"]))
+    story.append(Spacer(1, 2*mm))
+
+    def _phase_bullets(severity_list, max_items=3):
+        items = []
+        for f in mitre:
+            if f["severity"] not in severity_list:
+                continue
+            uid  = f.get("_uid", f["technique"])
+            fix  = FINDING_META.get(uid, FINDING_META.get(f["technique"], {})).get("fix", "")
+            if fix and fix not in items:
+                items.append(fix)
+            if len(items) >= max_items:
+                break
+        if not items:
+            return "Aucune action requise pour cette phase."
+        return "<br/>".join(
+            f"• {esc(x[:90])}…" if len(x) > 90 else f"• {esc(x)}" for x in items
+        )
+
+    rmap_rows = [
+        [_p("Phase", 8, white, bold=True, align=TA_CENTER),
+         _p("Délai", 8, white, bold=True, align=TA_CENTER),
+         _p("Actions prioritaires", 8, white, bold=True),
+         _p("Périmètre", 8, white, bold=True)],
+        [_p("<b>1 — URGENCE</b>",     8, white, bold=True, align=TA_CENTER),
+         _p("< 48h",                  8, white, bold=True, align=TA_CENTER),
+         _p(_phase_bullets(["CRITICAL"]), 8),
+         _p("Findings CRITIQUES", 7, C["muted"])],
+        [_p("<b>2 — COURT TERME</b>", 8, white, bold=True, align=TA_CENTER),
+         _p("< 30 jours",             8, white, bold=True, align=TA_CENTER),
+         _p(_phase_bullets(["HIGH"]), 8),
+         _p("Findings ÉLEVÉS", 7, C["muted"])],
+        [_p("<b>3 — MOYEN TERME</b>", 8, white, bold=True, align=TA_CENTER),
+         _p("< 90 jours",             8, white, bold=True, align=TA_CENTER),
+         _p(_phase_bullets(["MEDIUM"]), 8),
+         _p("Findings MOYENS + revue conformité annuelle", 7, C["muted"])],
+    ]
+    rmap_styles = [
+        ("BACKGROUND",  (0,0),(-1,0),  C["primary"]),
+        ("BACKGROUND",  (0,1),(1,1),   C["critical"]),
+        ("BACKGROUND",  (0,2),(1,2),   C["high"]),
+        ("BACKGROUND",  (0,3),(1,3),   C["medium"]),
+        ("ROWBACKGROUNDS",(2,1),(-1,-1),[C["bg"],white,C["bg"]]),
+        ("GRID",        (0,0),(-1,-1), .5, C["border"]),
+        ("PADDING",     (0,0),(-1,-1), 6),
+        ("VALIGN",      (0,0),(-1,-1), "TOP"),
+        ("VALIGN",      (0,0),(1,-1),  "MIDDLE"),
+        ("ALIGN",       (0,0),(1,-1),  "CENTER"),
+    ]
+    rmap_tbl = Table(rmap_rows, colWidths=[W*.14, W*.11, W*.57, W*.18])
+    rmap_tbl.setStyle(TableStyle(rmap_styles))
+    story += [rmap_tbl, Spacer(1, 4*mm)]
+
+    # ── 7. Recommandations GRC ───────────────────────────────────────────────
     story += section_title("Recommandations GRC — ISO 27001 / NIS 2 / DORA")
     GRC_DELAY = {"CRITICAL": "Immédiat", "HIGH": "48h", "MEDIUM": "30 jours", "LOW": "90 jours"}
     grows = [[_p("Framework",8,white,bold=True,align=TA_CENTER),
