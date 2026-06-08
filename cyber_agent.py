@@ -1206,6 +1206,79 @@ def build_gap_analysis(mitre_findings):
     return gaps
 
 # =============================================================================
+# NIST SP 800-53 Rev. 5 — CHARGEMENT + SCORING + FAMILLES
+# =============================================================================
+_NIST_JSON_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "nist_800_53.json")
+try:
+    with open(_NIST_JSON_PATH, encoding="utf-8") as _f:
+        _NIST_DATA = json.load(_f)
+    _NIST_FAMILIES = _NIST_DATA["nist_families"]
+except Exception:
+    _NIST_FAMILIES = {}
+
+# Mapping technique MITRE (préfixe) → familles NIST 800-53 impactées
+_MITRE_TO_NIST = {
+    "T1021": ["AC", "CM", "SC"],
+    "T1040": ["SC"],
+    "T1046": ["RA", "CA"],
+    "T1059": ["SC", "SI"],
+    "T1071": ["SC"],
+    "T1078": ["AC", "IA"],
+    "T1083": ["AC", "RA"],
+    "T1110": ["AC", "IA"],
+    "T1135": ["AC", "SC"],
+    "T1185": ["AC", "SC"],
+    "T1189": ["SC", "SI"],
+    "T1190": ["SC", "SI", "RA"],
+    "T1199": ["CM", "SA"],
+    "T1210": ["SC", "SI", "RA"],
+    "T1530": ["AC", "MP"],
+    "T1539": ["AC", "SC"],
+    "T1552": ["IA", "SA"],
+    "T1557": ["SC"],
+    "T1562": ["AU", "SI"],
+    "T1566": ["IR", "SI"],
+    "T1583": ["RA", "SI"],
+    "T1598": ["AU", "IR", "SI"],
+    "T1003": ["IA", "CM"],
+    "T1039": ["AC", "SC"],
+    "T1530": ["AC", "MP"],
+}
+
+_NIST_ALL_FAMILIES = ["AC","AU","CA","CM","CP","IA","IR","MA","MP","PE",
+                       "PL","PM","PS","PT","RA","SA","SC","SI","SR"]
+_NIST_SEV_WEIGHTS  = {"CRITICAL": 20, "HIGH": 12, "MEDIUM": 6, "LOW": 2}
+
+def compute_nist_score(mitre_findings):
+    """Retourne (score_global, family_hits {fam: [findings]}, family_scores {fam: int})."""
+    family_hits = {}
+    for f in mitre_findings:
+        uid  = f.get("_uid", f["technique"])
+        tech = f["technique"]
+        fams = set()
+        for prefix, families in _MITRE_TO_NIST.items():
+            if uid.startswith(prefix) or tech.startswith(prefix):
+                fams.update(families)
+        for fam in fams:
+            family_hits.setdefault(fam, []).append(f)
+
+    family_scores = {}
+    for fam in _NIST_ALL_FAMILIES:
+        hits = family_hits.get(fam, [])
+        if not hits:
+            family_scores[fam] = 100
+        else:
+            deduction = min(sum(_NIST_SEV_WEIGHTS.get(h["severity"], 2) for h in hits), 80)
+            family_scores[fam] = max(0, 100 - deduction)
+
+    if not family_hits:
+        overall = 100
+    else:
+        overall = int(sum(family_scores[f] for f in family_hits) / len(family_hits))
+
+    return overall, family_hits, family_scores
+
+# =============================================================================
 # FINDING METADATA — impact + remédiation statiques par technique
 # =============================================================================
 FINDING_META = {
@@ -1837,6 +1910,7 @@ def save_pdf_report(target):
     # ── 6. Rapport GRC — Analyse de Conformité ──────────────────────────────
     fw_scores  = compute_framework_scores(mitre)
     gap_items  = build_gap_analysis(mitre)
+    nist_score, nist_hits, nist_fam_scores = compute_nist_score(mitre)
 
     story += section_title("Rapport GRC — Analyse de Conformité Réglementaire")
 
@@ -1854,17 +1928,20 @@ def save_pdf_report(target):
 
     sc_row = [[
         _p(f"<b>{fw_scores['ISO 27001']}/100</b><br/>ISO 27001:2022<br/><font size='7'>{_score_label(fw_scores['ISO 27001'])}</font>",
-           11, white, bold=True, align=TA_CENTER),
+           10, white, bold=True, align=TA_CENTER),
         _p(f"<b>{fw_scores['NIS 2']}/100</b><br/>NIS 2 (UE 2022/2555)<br/><font size='7'>{_score_label(fw_scores['NIS 2'])}</font>",
-           11, white, bold=True, align=TA_CENTER),
+           10, white, bold=True, align=TA_CENTER),
         _p(f"<b>{fw_scores['DORA']}/100</b><br/>DORA (UE 2022/2554)<br/><font size='7'>{_score_label(fw_scores['DORA'])}</font>",
-           11, white, bold=True, align=TA_CENTER),
+           10, white, bold=True, align=TA_CENTER),
+        _p(f"<b>{nist_score}/100</b><br/>NIST SP 800-53 Rev.5<br/><font size='7'>{_score_label(nist_score)}</font>",
+           10, white, bold=True, align=TA_CENTER),
     ]]
-    sc_tbl = Table(sc_row, colWidths=[W/3]*3, rowHeights=[18*mm])
+    sc_tbl = Table(sc_row, colWidths=[W/4]*4, rowHeights=[18*mm])
     sc_tbl.setStyle(TableStyle([
         ("BACKGROUND",(0,0),(0,0), _score_color(fw_scores["ISO 27001"])),
         ("BACKGROUND",(1,0),(1,0), _score_color(fw_scores["NIS 2"])),
         ("BACKGROUND",(2,0),(2,0), _score_color(fw_scores["DORA"])),
+        ("BACKGROUND",(3,0),(3,0), _score_color(nist_score)),
         ("ALIGN",   (0,0),(-1,-1), "CENTER"),
         ("VALIGN",  (0,0),(-1,-1), "MIDDLE"),
         ("GRID",    (0,0),(-1,-1), 1.5, white),
@@ -1912,6 +1989,47 @@ def save_pdf_report(target):
     gap_tbl = Table(gap_rows, colWidths=[W*.09, W*.21, W*.12, W*.09, W*.07, W*.05, W*.37])
     gap_tbl.setStyle(TableStyle(gap_styles))
     story += [gap_tbl, Spacer(1, 4*mm)]
+
+    # NIST 800-53 control families table
+    if nist_hits and _NIST_FAMILIES:
+        story.append(_p("<b>NIST SP 800-53 Rev. 5 — Familles de Contrôles Impactées</b>", 10, C["primary"]))
+        story.append(Spacer(1, 2*mm))
+        nist_rows = [[
+            _p("Famille", 8, white, bold=True),
+            _p("Nom", 8, white, bold=True),
+            _p("Contrôles clés", 8, white, bold=True),
+            _p("Score", 8, white, bold=True, align=TA_CENTER),
+            _p("Findings", 8, white, bold=True, align=TA_CENTER),
+        ]]
+        nist_styles = [
+            ("BACKGROUND",    (0,0),(-1,0), C["primary"]),
+            ("ROWBACKGROUNDS",(0,1),(-1,-1), [C["bg"], white]),
+            ("GRID",          (0,0),(-1,-1), .5, C["border"]),
+            ("PADDING",       (0,0),(-1,-1), 5),
+            ("VALIGN",        (0,0),(-1,-1), "MIDDLE"),
+        ]
+        sorted_hits = sorted(nist_hits.items(),
+                             key=lambda kv: min({"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3}.get(h["severity"],4)
+                                                for h in kv[1]))
+        for i, (fam_id, findings) in enumerate(sorted_hits, 1):
+            fam_data = _NIST_FAMILIES.get(fam_id, {})
+            fam_name = fam_data.get("name", fam_id)
+            key_ctrls = ", ".join(c.split(":")[0] for c in fam_data.get("key_controls", [])[:3])
+            fscore = nist_fam_scores.get(fam_id, 100)
+            worst_sev = min(findings, key=lambda x: {"CRITICAL":0,"HIGH":1,"MEDIUM":2,"LOW":3}.get(x["severity"],4))["severity"]
+            nist_rows.append([
+                _p(f"<b>{fam_id}</b>", 8, C["accent"]),
+                _p(fam_name, 8),
+                _p(key_ctrls, 7, C["muted"]),
+                _p(f"{fscore}/100", 8, white, bold=True, align=TA_CENTER),
+                _p(str(len(findings)), 8,
+                   C["critical"] if worst_sev == "CRITICAL" else C["high"] if worst_sev == "HIGH" else C["medium"],
+                   align=TA_CENTER),
+            ])
+            nist_styles.append(("BACKGROUND", (3,i),(3,i), _score_color(fscore)))
+        nist_tbl = Table(nist_rows, colWidths=[W*.08, W*.22, W*.38, W*.16, W*.16])
+        nist_tbl.setStyle(TableStyle(nist_styles))
+        story += [nist_tbl, Spacer(1, 4*mm)]
 
     # Remediation roadmap
     story.append(_p("<b>Plan de Traitement des Risques</b>", 10, C["primary"]))

@@ -1,0 +1,281 @@
+{
+  "metadata": {
+    "title": "NIST SP 800-53 Revision 5 - Orchestrateur Integration Reference",
+    "version": "1.0",
+    "generated": "2026-06-08",
+    "purpose": "Map NIST 800-53 controls to pentest findings, MITRE ATT&CK, and GRC frameworks"
+  },
+  "nist_families": {
+    "AC": {
+      "name": "Access Control",
+      "description": "Limit information system access to authorized users, processes, and devices",
+      "key_controls": ["AC-2: Account Management", "AC-3: Access Enforcement", "AC-6: Privileged Access", "AC-17: Remote Access"],
+      "grc_mapping": {
+        "iso27001": ["A.5.1", "A.8.1", "A.8.2"],
+        "nis2": ["Authentication", "Authorization"],
+        "dora": ["ICT Risk Management", "Third-party Dependencies"]
+      },
+      "pentest_coverage": ["Privilege Escalation", "Lateral Movement", "Unauthorized Access"],
+      "mitre_atck": ["T1110: Brute Force", "T1078: Valid Accounts", "T1548: Abuse Elevation Control"]
+    },
+    "AU": {
+      "name": "Audit and Accountability",
+      "description": "Detect, record, and review security-relevant activities",
+      "key_controls": ["AU-2: Audit Events", "AU-3: Audit Content", "AU-4: Audit Storage", "AU-12: Audit Generation"],
+      "grc_mapping": {
+        "iso27001": ["A.8.15: Logging"],
+        "nis2": ["Incident Management", "Logging and Monitoring"],
+        "dora": ["ICT Incident Reporting"]
+      },
+      "pentest_coverage": ["Log Tampering", "Log Deletion", "Audit Bypass"],
+      "mitre_atck": ["T1562: Impair Defenses", "T1070: Indicator Removal"]
+    },
+    "CA": {
+      "name": "Assessment, Authorization, and Monitoring",
+      "description": "Assess controls, authorize systems, and monitor ongoing security posture",
+      "key_controls": ["CA-2: Security Assessments", "CA-6: Risk-based Decisions", "CA-7: Continuous Monitoring"],
+      "grc_mapping": {
+        "iso27001": ["A.5.1: Information Security Policies"],
+        "nis2": ["Governance and Risk Management"],
+        "dora": ["ICT Risk Management", "Advanced Threat Testing"]
+      },
+      "pentest_coverage": ["Unpatched Systems", "Configuration Errors", "Policy Violations"],
+      "mitre_atck": ["T1526: Reconnaissance"]
+    },
+    "CM": {
+      "name": "Configuration Management",
+      "description": "Manage information system configuration and maintain integrity",
+      "key_controls": ["CM-2: Baseline Configuration", "CM-3: Change Control", "CM-5: Integrity Verification"],
+      "grc_mapping": {
+        "iso27001": ["A.8.5: Control of operational software"],
+        "nis2": ["Governance and Risk Management"],
+        "dora": ["Operational Resilience"]
+      },
+      "pentest_coverage": ["Configuration Drift", "Unauthorized Changes", "Missing Patches"],
+      "mitre_atck": ["T1199: Trusted Relationship", "T1021: Remote Services"]
+    },
+    "CP": {
+      "name": "Contingency Planning",
+      "description": "Establish recovery and disaster recovery processes",
+      "key_controls": ["CP-2: Disaster Recovery Plan", "CP-4: Contingency Plan Testing", "CP-10: System Recovery"],
+      "grc_mapping": {
+        "iso27001": ["A.8.14: Redundancy"],
+        "nis2": ["Incident Management", "Operational Resilience"],
+        "dora": ["Operational Resilience", "Advanced Threat Testing"]
+      },
+      "pentest_coverage": ["Service Disruption", "Recovery Time RTO/RPO", "Backup Integrity"],
+      "mitre_atck": ["T1561: Disk Wipe", "T1529: System Shutdown"]
+    },
+    "IA": {
+      "name": "Identification and Authentication",
+      "description": "Verify user and device identity through appropriate authentication mechanisms",
+      "key_controls": ["IA-2: Authentication", "IA-3: Device Identification", "IA-5: Authenticator Management"],
+      "grc_mapping": {
+        "iso27001": ["A.8.2: User registration and access rights", "A.8.3: Password management"],
+        "nis2": ["Authentication & Cryptography"],
+        "dora": ["ICT Risk Management"]
+      },
+      "pentest_coverage": ["Weak Passwords", "Credential Stuffing", "MFA Bypass"],
+      "mitre_atck": ["T1110: Brute Force", "T1187: Forced Authentication", "T1111: Multi-Factor Auth Interception"]
+    },
+    "IR": {
+      "name": "Incident Response",
+      "description": "Prepare to detect, analyze, and respond to security incidents",
+      "key_controls": ["IR-1: Incident Response Policy", "IR-4: Incident Handling", "IR-5: Incident Monitoring"],
+      "grc_mapping": {
+        "iso27001": ["A.5.2: Incident management"],
+        "nis2": ["Incident Management"],
+        "dora": ["ICT Incident Reporting (24h)"]
+      },
+      "pentest_coverage": ["Detection Capability", "Response Time", "Playbook Coverage"],
+      "mitre_atck": ["Full Attack Lifecycle Detection"]
+    },
+    "MA": {
+      "name": "Maintenance",
+      "description": "Perform and manage maintenance of information systems",
+      "key_controls": ["MA-1: System Maintenance", "MA-2: Controlled Maintenance", "MA-4: Remote Maintenance"],
+      "grc_mapping": {
+        "iso27001": ["A.8.7: Management of technical vulnerabilities"],
+        "nis2": ["Governance and Risk Management"],
+        "dora": ["Operational Resilience"]
+      },
+      "pentest_coverage": ["Maintenance Windows", "Patch Management", "Vendor Access"],
+      "mitre_atck": ["T1021: Remote Services", "T1199: Trusted Relationship"]
+    },
+    "MP": {
+      "name": "Media Protection",
+      "description": "Protect media containing organizational information",
+      "key_controls": ["MP-2: Media Sanitization", "MP-3: Media Marking", "MP-4: Media Storage"],
+      "grc_mapping": {
+        "iso27001": ["A.8.2: Management of removable media"],
+        "nis2": ["Data Protection"],
+        "dora": ["Operational Resilience"]
+      },
+      "pentest_coverage": ["USB/Device Exposure", "Data Leakage", "Unencrypted Media"],
+      "mitre_atck": ["T1025: Data from Removable Media"]
+    },
+    "PE": {
+      "name": "Physical and Environmental Protection",
+      "description": "Protect facilities and equipment from unauthorized physical access",
+      "key_controls": ["PE-1: Physical Protection", "PE-2: Physical Entry", "PE-3: Physical Lockdown", "PE-6: Monitoring Physical Access"],
+      "grc_mapping": {
+        "iso27001": ["A.7: Physical and Environmental Controls"],
+        "nis2": ["Physical Security"],
+        "dora": ["Operational Resilience"]
+      },
+      "pentest_coverage": ["Tailgating", "Rogue Hardware", "Data Center Access"],
+      "mitre_atck": ["T1200: Hardware Additions", "T1200: Rogue Devices"]
+    },
+    "PL": {
+      "name": "Planning",
+      "description": "Establish organizational information security and privacy policies",
+      "key_controls": ["PL-1: Security Planning", "PL-2: System Security Plan", "PL-4: Rules of Behavior"],
+      "grc_mapping": {
+        "iso27001": ["A.5.1: Policies for information security"],
+        "nis2": ["Governance and Risk Management"],
+        "dora": ["Governance & Risk Management"]
+      },
+      "pentest_coverage": ["Policy Awareness", "Documented Procedures", "Role Clarity"],
+      "mitre_atck": ["T1526: Reconnaissance"]
+    },
+    "PM": {
+      "name": "Program Management",
+      "description": "Establish and implement an information security program",
+      "key_controls": ["PM-1: Information Security Program", "PM-2: Chief Information Security Officer", "PM-3: Information Security Resources"],
+      "grc_mapping": {
+        "iso27001": ["A.5.1: Management direction for information security"],
+        "nis2": ["Governance and Risk Management"],
+        "dora": ["Governance & Risk Management"]
+      },
+      "pentest_coverage": ["Organizational Maturity", "Budget Allocation", "Executive Support"],
+      "mitre_atck": ["T1526: Reconnaissance"]
+    },
+    "PS": {
+      "name": "Personnel Security",
+      "description": "Ensure appropriate personnel are selected and authorized",
+      "key_controls": ["PS-1: Personnel Security Policy", "PS-3: Personnel Screening", "PS-6: Access Termination"],
+      "grc_mapping": {
+        "iso27001": ["A.6: Human Resource Security"],
+        "nis2": ["Personnel & Awareness"],
+        "dora": ["Governance & Risk Management"]
+      },
+      "pentest_coverage": ["Insider Threats", "Background Checks", "Offboarding"],
+      "mitre_atck": ["T1657: Financial Theft", "T1020: Automated Exfiltration"]
+    },
+    "PT": {
+      "name": "PII Processing and Transparency",
+      "description": "Manage personally identifiable information processing",
+      "key_controls": ["PT-1: Privacy Notice", "PT-2: Authority to Collect", "PT-3: Impactful PII"],
+      "grc_mapping": {
+        "iso27001": ["A.8: Technical Controls for data protection"],
+        "nis2": ["Data Protection"],
+        "dora": ["ICT Risk Management"]
+      },
+      "pentest_coverage": ["Data Inventory", "Consent Management", "Data Subject Rights"],
+      "mitre_atck": ["T1537: Transfer Data to Cloud Account"]
+    },
+    "RA": {
+      "name": "Risk Assessment",
+      "description": "Conduct risk assessments and document results",
+      "key_controls": ["RA-3: Risk Assessment", "RA-5: Vulnerability Scanning", "RA-6: Technical Surveillance"],
+      "grc_mapping": {
+        "iso27001": ["A.5.1: Risk assessment"],
+        "nis2": ["Governance and Risk Management"],
+        "dora": ["ICT Risk Management", "Advanced Threat Testing"]
+      },
+      "pentest_coverage": ["Vulnerability Discovery", "Risk Quantification", "Scan Frequency"],
+      "mitre_atck": ["T1526: Reconnaissance", "T1595: Active Scanning"]
+    },
+    "SA": {
+      "name": "System and Services Acquisition",
+      "description": "Implement processes to acquire and manage information systems",
+      "key_controls": ["SA-2: Acquisition Process", "SA-3: System Development Lifecycle", "SA-5: Information System Documentation"],
+      "grc_mapping": {
+        "iso27001": ["A.5.3: Supplier relationships", "A.8.4: Cryptography"],
+        "nis2": ["Third-party Risk Management"],
+        "dora": ["Third-party Dependencies"]
+      },
+      "pentest_coverage": ["Secure SDLC", "Vendor Assessment", "Code Review"],
+      "mitre_atck": ["T1195: Supply Chain Compromise"]
+    },
+    "SC": {
+      "name": "System and Communications Protection",
+      "description": "Monitor and control system communications and boundaries",
+      "key_controls": ["SC-7: Boundary Protection", "SC-8: Information in Transit", "SC-28: Information at Rest", "SC-39: Process Isolation"],
+      "grc_mapping": {
+        "iso27001": ["A.8.2: Access control", "A.8.13: Network segregation"],
+        "nis2": ["Network Segmentation", "Cryptography", "Zero Trust"],
+        "dora": ["Operational Resilience"]
+      },
+      "pentest_coverage": ["Network Segmentation", "Encryption Effectiveness", "Firewall Rules"],
+      "mitre_atck": ["T1021: Remote Services", "T1570: Lateral Tool Transfer"]
+    },
+    "SI": {
+      "name": "System and Information Integrity",
+      "description": "Protect system and information integrity",
+      "key_controls": ["SI-2: Flaw Remediation", "SI-3: Malware Protection", "SI-4: Information System Monitoring", "SI-12: Information Handling"],
+      "grc_mapping": {
+        "iso27001": ["A.8.6: Security of development and support processes"],
+        "nis2": ["Threat Detection", "Incident Management"],
+        "dora": ["Advanced Threat Testing", "Incident Reporting"]
+      },
+      "pentest_coverage": ["Malware Detection", "EDR Effectiveness", "Patch Timeliness"],
+      "mitre_atck": ["T1583: Acquire Infrastructure", "T1587: Develop Capabilities"]
+    },
+    "SR": {
+      "name": "Supply Chain Risk Management",
+      "description": "Manage supply chain information security risks",
+      "key_controls": ["SR-1: Supply Chain Risk Management", "SR-2: Supply Chain Risk Monitoring", "SR-3: Supply Chain Controls"],
+      "grc_mapping": {
+        "iso27001": ["A.5.3: Supplier relationships"],
+        "nis2": ["Third-party Risk Management"],
+        "dora": ["Third-party Dependencies", "Critical Vendor Audit"]
+      },
+      "pentest_coverage": ["Vendor Audit", "SLA Enforcement", "Incident Notification"],
+      "mitre_atck": ["T1195: Supply Chain Compromise"]
+    }
+  },
+  "orchestrateur_integration": {
+    "pentest_findings_mapping": {
+      "example_finding": {
+        "title": "Weak SSH Credentials",
+        "cve": "N/A",
+        "severity": "Critical",
+        "nist_controls_violated": ["IA-2", "IA-5", "AC-2"],
+        "iso27001_mapping": ["A.8.2", "A.8.3"],
+        "nis2_mapping": ["Authentication"],
+        "dora_mapping": ["ICT Risk Management"],
+        "mitre_atck_techniques": ["T1110: Brute Force", "T1078: Valid Accounts"],
+        "remediation": "Enforce MFA, rotate keys, disable weak algorithms"
+      }
+    },
+    "report_generation": {
+      "templates": ["NIST 800-53 Assessment", "ISO 27001 Gap Analysis", "NIS2 Compliance Report", "DORA Readiness Assessment"],
+      "elements": [
+        "Control Status (Not Implemented / Partial / Fully Implemented)",
+        "Evidence of Implementation",
+        "Gap Analysis",
+        "Remediation Timeline",
+        "Risk Score",
+        "Audit Trail"
+      ]
+    },
+    "scoring_framework": {
+      "methodology": "NIST RMF adapted",
+      "scale": "0-100",
+      "calculation": "Sum of (Control Maturity * Weight) / Total Weight",
+      "controls_weight_distribution": {
+        "Critical": 0.35,
+        "High": 0.30,
+        "Medium": 0.20,
+        "Low": 0.15
+      }
+    }
+  },
+  "grc_framework_alignment": {
+    "iso27001_controls": 114,
+    "nis2_requirements": "Mandatory for EU Critical Infrastructure",
+    "dora_applicability": "EU Fintech & Financial Institutions",
+    "nist_baseline_coverage": "Covers all 3 frameworks at baseline with Revision 5"
+  }
+}
