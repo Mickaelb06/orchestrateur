@@ -1150,7 +1150,6 @@ def compute_framework_scores(mitre_findings):
         for f in mitre_findings:
             uid  = f.get("_uid", f["technique"])
             tech = f["technique"]
-            base_tech = re.split(r"[-.]", uid)[0] + ("." + uid.split(".")[1] if "." in uid else "")
             matched = any(
                 uid.startswith(p) or tech.startswith(p) or f["technique"].startswith(p)
                 for p in cfg["prefixes"]
@@ -1242,7 +1241,6 @@ _MITRE_TO_NIST = {
     "T1598": ["AU", "IR", "SI"],
     "T1003": ["IA", "CM"],
     "T1039": ["AC", "SC"],
-    "T1530": ["AC", "MP"],
 }
 
 _NIST_ALL_FAMILIES = ["AC","AU","CA","CM","CP","IA","IR","MA","MP","PE",
@@ -1271,10 +1269,7 @@ def compute_nist_score(mitre_findings):
             deduction = min(sum(_NIST_SEV_WEIGHTS.get(h["severity"], 2) for h in hits), 80)
             family_scores[fam] = max(0, 100 - deduction)
 
-    if not family_hits:
-        overall = 100
-    else:
-        overall = int(sum(family_scores[f] for f in family_hits) / len(family_hits))
+    overall = int(sum(family_scores[f] for f in _NIST_ALL_FAMILIES) / len(_NIST_ALL_FAMILIES))
 
     return overall, family_hits, family_scores
 
@@ -1669,31 +1664,36 @@ def get_executive_summary(target, mitre_findings):
                 f"détectable par les outils utilisés. La surface d'attaque exposée semble limitée. "
                 f"Une analyse manuelle approfondie est recommandée pour confirmer ces résultats.")
     sev_order = {"CRITICAL": 0, "HIGH": 1, "MEDIUM": 2, "LOW": 3}
-    top = sorted(mitre_findings, key=lambda x: sev_order.get(x["severity"], 4))[:8]
-    findings_list = "\n".join(f"- [{f['severity']}] {f['name']}" for f in top)
+    top = sorted(mitre_findings, key=lambda x: sev_order.get(x["severity"], 4))[:5]
+    crit = sum(1 for f in mitre_findings if f["severity"] == "CRITICAL")
+    high = sum(1 for f in mitre_findings if f["severity"] == "HIGH")
+    top1 = top[0]["name"] if top else ""
+    top2 = top[1]["name"] if len(top) > 1 else ""
+    findings_list = "\n".join(f"- {f['name']} ({f['severity']})" for f in top)
     prompt = (
-        f"Voici les vulnérabilités confirmées par scan automatisé sur {target} :\n\n"
+        f"Cible : {target}\n"
+        f"Résultats du scan ({len(mitre_findings)} vulnérabilités, {crit} critiques, {high} élevées) :\n"
         f"{findings_list}\n\n"
-        f"En 3 phrases concises en français pour un DSI non-technique :\n"
-        f"1. Niveau de risque global et menace principale.\n"
-        f"2. Impact métier des 2 findings les plus critiques.\n"
-        f"3. Urgence et prochaine action prioritaire.\n\n"
-        f"RÈGLE ABSOLUE : Mentionne UNIQUEMENT les éléments de la liste ci-dessus. "
-        f"Aucune technologie, outil ou vulnérabilité non listé."
+        f"Ecris exactement 3 phrases en français, sans puce, sans titre :\n"
+        f"Phrase 1 : niveau de risque global.\n"
+        f"Phrase 2 : impact metier de '{top1}'"
+        + (f" et '{top2}'" if top2 else "") + ".\n"
+        f"Phrase 3 : action prioritaire immediate.\n"
+        f"Utilise uniquement les elements ci-dessus."
     )
     try:
         sp = Spinner("Synthèse executive...")
         sp.start()
         resp = ollama.chat(model=MODEL_NAME, messages=[
-            {"role": "system", "content": "Tu es un expert cybersécurité senior. Réponds en exactement 3 phrases, sans markdown, directement."},
+            {"role": "system", "content": "Tu es expert cybersecurite. Reponds en 3 phrases courtes en francais, sans markdown."},
             {"role": "user",   "content": prompt},
-        ])
+        ], options={"temperature": 0.1})
         sp.stop()
-        return re.sub(r'\*+', '', resp["message"]["content"]).strip()
+        text = re.sub(r'\*+', '', resp["message"]["content"]).strip()
+        # Garde uniquement les 3 premières phrases non vides
+        sentences = [s.strip() for s in re.split(r'(?<=[.!?])\s+', text) if s.strip()][:3]
+        return " ".join(sentences) if sentences else text
     except:
-        crit = sum(1 for f in mitre_findings if f["severity"] == "CRITICAL")
-        high = sum(1 for f in mitre_findings if f["severity"] == "HIGH")
-        top1 = top[0]["name"] if top else "vulnérabilité critique"
         return (f"L'audit de {target} révèle {len(mitre_findings)} vulnérabilités "
                 f"({crit} critiques, {high} élevées). "
                 f"La menace principale identifiée : {top1}. "
@@ -2138,12 +2138,6 @@ def chat_with_agent(user_input):
             text = response["message"]["content"]
             print(f"\n🤖 L'Orchestrateur:\n{text}")
 
-            if "RAPPORT" in text.upper() or "CONCLUSION" in text.upper():
-                m = re.search(r'(?:https?://)?([a-zA-Z0-9][a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})', user_input)
-                target = m.group(1) if m else user_input.split()[-1].strip()
-                save_pdf_report(target)
-                break
-
             # Primary: "ACTION: tool(arg)" or "ACTION : tool(arg)"
             actions = re.findall(r"ACTION\s*:\s*(\w+)\((.*?)\)", text)
             # Fallback: LLM used backtick format `tool(arg)` — extract known tools
@@ -2166,6 +2160,11 @@ def chat_with_agent(user_input):
                     else:
                         MEMORY.append({"role": "user", "content": f"Erreur : outil '{tool_name}' inconnu."})
             else:
+                # Plus d'actions — générer le PDF si des scans ont été effectués
+                if SESSION_LOG:
+                    m = re.search(r'(?:https?://)?([a-zA-Z0-9][a-zA-Z0-9\-\.]+\.[a-zA-Z]{2,}|(?:\d{1,3}\.){3}\d{1,3})', user_input)
+                    target = m.group(1) if m else user_input.split()[-1].strip()
+                    save_pdf_report(target)
                 break
 
         except Exception as e:
